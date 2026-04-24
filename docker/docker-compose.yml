@@ -1,0 +1,98 @@
+version: "3.9"
+
+# ── Shared network — all ROS 2 traffic stays on this bridge ─────────────────
+networks:
+  ros2_net:
+    driver: bridge
+
+# ── Named volumes for persistent data ───────────────────────────────────────
+volumes:
+  nav2_maps:         # saved SLAM maps persist across restarts
+  isaac_logs:        # Isaac Sim logs
+
+# ═══════════════════════════════════════════════════════════════════════════
+# Services
+# ═══════════════════════════════════════════════════════════════════════════
+services:
+
+  # ── 1. Isaac Lab — G1 physics sim + locomotion policy + ROS 2 sensors ──
+  isaac-lab:
+    build:
+      context: ..
+      dockerfile: docker/isaac-lab/Dockerfile
+    runtime: nvidia
+    environment:
+      - NVIDIA_VISIBLE_DEVICES=all
+      - NVIDIA_DRIVER_CAPABILITIES=all
+      - DISPLAY=${DISPLAY:-:1}
+      - ROS_DOMAIN_ID=${ROS_DOMAIN_ID:-42}
+      - ACCEPT_EULA=Y          # required by Isaac Sim EULA
+    volumes:
+      - /tmp/.X11-unix:/tmp/.X11-unix:rw
+      - ./checkpoints:/checkpoints:ro
+      - ./sim:/workspace/g1_sim:ro
+      - isaac_logs:/root/.nvidia-omniverse/logs
+    networks:
+      - ros2_net
+    ports:
+      - "8211:8211"            # Isaac Sim Omniverse streaming
+    healthcheck:
+      test: ["CMD", "ros2", "topic", "list"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 90s        # Isaac Sim takes ~60-90 s to fully boot
+
+  # ── 2. Velocity Bridge — /cmd_vel ↔ locomotion policy / Unitree SDK ────
+  vel-bridge:
+    build:
+      context: ..
+      dockerfile: docker/vel-bridge/Dockerfile
+    environment:
+      - ROS_DOMAIN_ID=${ROS_DOMAIN_ID:-42}
+      - ROBOT_MODE=${ROBOT_MODE:-sim}   # override with ROBOT_MODE=real for hardware
+    networks:
+      - ros2_net
+    depends_on:
+      isaac-lab:
+        condition: service_healthy
+    restart: on-failure
+
+  # ── 3. ROS 2 Nav2 — SLAM Toolbox + Nav2 stack ──────────────────────────
+  ros2-nav:
+    build:
+      context: ..
+      dockerfile: docker/ros2-nav/Dockerfile
+    environment:
+      - ROS_DOMAIN_ID=${ROS_DOMAIN_ID:-42}
+      - DISPLAY=${DISPLAY:-:1}
+    volumes:
+      - /tmp/.X11-unix:/tmp/.X11-unix:rw
+      - ./nav2_config:/nav2_config:ro
+      - ./launch:/launch:ro
+      - nav2_maps:/maps          # SLAM maps persist here
+    networks:
+      - ros2_net
+    depends_on:
+      vel-bridge:
+        condition: service_started
+    restart: on-failure
+
+  # ── 4. RViz2 — visualisation + goal setting (X11 forwarded) ────────────
+  rviz:
+    build:
+      context: ..
+      dockerfile: docker/ros2-nav/Dockerfile   # same image, different entrypoint
+    environment:
+      - ROS_DOMAIN_ID=${ROS_DOMAIN_ID:-42}
+      - DISPLAY=${DISPLAY:-:1}
+    volumes:
+      - /tmp/.X11-unix:/tmp/.X11-unix:rw
+      - ./nav2_config:/nav2_config:ro
+    networks:
+      - ros2_net
+    entrypoint: >
+      bash -c "source /opt/ros/humble/setup.bash &&
+               rviz2 -d /nav2_config/g1_nav.rviz"
+    depends_on:
+      - ros2-nav

@@ -1,0 +1,32 @@
+# =============================================================================
+# nav2_config/depth_to_scan.yaml
+# Converts D435i depth image → 2D LaserScan for SLAM Toolbox.
+#
+# The D435i on the G1's head publishes sensor_msgs/Image on /depth/image_raw.
+# depthimage_to_laserscan takes a horizontal slice of that image and produces
+# a sensor_msgs/LaserScan on /scan that SLAM and Nav2 costmaps consume.
+# =============================================================================
+depthimage_to_laserscan:
+  ros__parameters:
+    # ── Input ──────────────────────────────────────────────────────────────
+    # Topic the node subscribes to for depth images.
+    # Must match what the Isaac Lab sim bridge (or real D435i driver) publishes.
+    # camera_info is also subscribed automatically from the same namespace.
+    # Override with remapping in the launch file if needed.
+
+    # ── Scan slice geometry ──────────────────────────────────────────────
+    # Number of pixel rows to integrate into one scan line (centred vertically)
+    scan_height: 10
+
+    # Range limits [m]
+    range_min: 0.25   # D435i min reliable depth
+    range_max: 5.0    # D435i indoor range
+
+    # ── Output ─────────────────────────────────────────────────────────────
+    # Frame for the output LaserScan — must match base_frame in SLAM Toolbox
+    output_frame: base_link
+
+    # ── Camera tilt correction ─────────────────────────────────────────────
+    # G1 head camera is angled slightly downward.
+    # If the scan is picking up the floor, reduce scan_height or increase
+    # the vertical offset via the camera URDF transform instead.
