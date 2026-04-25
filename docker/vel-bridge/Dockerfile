@@ -1,9 +1,9 @@
 # =============================================================================
 # Velocity Bridge Container — converts ROS 2 /cmd_vel to:
-#   ROBOT_MODE=sim  → Isaac Lab policy velocity input (ROS 2 topic relay)
+#   ROBOT_MODE=sim  (default)
 #   ROBOT_MODE=real → Unitree SDK SportClient.Move(vx, vy, yaw)
 # =============================================================================
-FROM osrf/ros:humble-ros-base
+FROM ros:humble
 
 # ── Dependencies ─────────────────────────────────────────────────────────────
 RUN apt-get update && apt-get install -y --no-install-recommends \

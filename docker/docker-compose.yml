@@ -1,5 +1,3 @@
-version: "3.9"
-
 # ── Shared network — all ROS 2 traffic stays on this bridge ─────────────────
 networks:
   ros2_net:
