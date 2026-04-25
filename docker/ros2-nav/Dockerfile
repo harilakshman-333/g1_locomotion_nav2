@@ -18,7 +18,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     ros-humble-slam-toolbox \
     # Sensor conversion
     ros-humble-depthimage-to-laserscan \
-    ros-humble-point-cloud-to-laserscan \
     # Localization / TF
     ros-humble-robot-localization \
     ros-humble-tf2-tools \
