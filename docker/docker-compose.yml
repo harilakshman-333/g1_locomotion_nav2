@@ -28,7 +28,6 @@ services:
     volumes:
       - /tmp/.X11-unix:/tmp/.X11-unix:rw
       - ./checkpoints:/checkpoints:ro
-      - ./sim:/workspace/g1_sim:ro
       - isaac_logs:/root/.nvidia-omniverse/logs
     networks:
       - ros2_net
