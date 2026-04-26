@@ -30,16 +30,14 @@ export ACCEPT_EULA="${ACCEPT_EULA}"
 #   /isaac-sim/runheadless.native.sh  (headless)
 #   /workspace/isaaclab.sh            (if Isaac Lab overlay is present)
 # We use the Isaac Sim Python directly for maximum compatibility.
-ISAAC_PYTHON="/isaac-sim/kit/python/bin/python3"
+ISAAC_PYTHON="/isaac-sim/python.sh"
 
 if [[ ! -f "${ISAAC_PYTHON}" ]]; then
-    echo "ERROR: Isaac Sim Python not found at ${ISAAC_PYTHON}"
-    echo "Available python binaries:"
-    find /isaac-sim -name "python*" -type f 2>/dev/null | head -5 || true
+    echo "ERROR: Isaac Sim Python wrapper not found at ${ISAAC_PYTHON}"
     exit 1
 fi
 
-echo "Using Python: ${ISAAC_PYTHON}"
+echo "Using runner: ${ISAAC_PYTHON}"
 echo "Starting G1 locomotion + ROS 2 bridge…"
 
 # ── Run the sim wrapper ───────────────────────────────────────────────────────
