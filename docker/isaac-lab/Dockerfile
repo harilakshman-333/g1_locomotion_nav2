@@ -34,10 +34,13 @@ RUN /isaac-sim/kit/python/bin/python3 -m pip install --no-cache-dir \
     || echo "WARNING: unitree_sim_isaaclab pip install failed — falling back to built-in tasks"
 
 # ── Copy our sim wrapper scripts into the container ──────────────────────────
+# NOTE: No system ROS install — isaacsim.ros2.bridge provides rclpy at runtime.
 COPY sim/ /workspace/g1_sim/
 RUN chmod +x /workspace/g1_sim/launch_sim.sh
 
+# ── Isaac Sim EULA must be accepted at runtime ────────────────────────────────
+ENV ACCEPT_EULA=Y
+
 WORKDIR /workspace
 
-# The launch script enables isaacsim.ros2.bridge and starts the G1 task.
 ENTRYPOINT ["/workspace/g1_sim/launch_sim.sh"]
