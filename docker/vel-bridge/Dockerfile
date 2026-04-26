@@ -6,7 +6,7 @@
 FROM ros:humble
 
 # ── Dependencies ─────────────────────────────────────────────────────────────
-RUN apt-get update && apt-get install -y --no-install-recommends \
+RUN apt-get update && apt-get install -y --no-install-recommends --fix-missing \
     ros-humble-geometry-msgs \
     ros-humble-std-msgs \
     python3-pip \

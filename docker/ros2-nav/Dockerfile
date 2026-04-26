@@ -4,7 +4,7 @@
 FROM osrf/ros:humble-desktop
 
 # ── Nav2 full stack ──────────────────────────────────────────────────────────
-RUN apt-get update && apt-get install -y --no-install-recommends \
+RUN apt-get update && apt-get install -y --no-install-recommends --fix-missing \
     # Navigation stack
     ros-humble-nav2-bringup \
     ros-humble-nav2-map-server \

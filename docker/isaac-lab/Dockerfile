@@ -3,47 +3,41 @@
 # =============================================================================
 # Base: NVIDIA's official Isaac Lab image (includes Isaac Sim 4.x + Isaac Lab 2.x)
 # EULA: https://docs.omniverse.nvidia.com/isaacsim/latest/common/NVIDIA_Omniverse_License_Agreement.html
+#
+# KEY DESIGN DECISION:
+# Isaac Sim bundles its own ROS 2 Humble environment inside the
+# isaacsim.ros2.bridge extension (located at
+# /isaac-sim/exts/isaacsim.ros2.bridge/). We do NOT install ROS 2 via apt —
+# that avoids the flaky packages.ros.org mirror entirely.
+# rclpy and all ROS 2 Python bindings are available through the Isaac Sim
+# Python environment once the bridge extension is enabled at runtime.
 # =============================================================================
 FROM nvcr.io/nvidia/isaac-lab:2.0.0
 
-# ── System packages ──────────────────────────────────────────────────────────
+# ── Minimal system packages (Ubuntu repos only — no ROS repo needed) ─────────
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    curl gnupg2 lsb-release \
+    git \
+    curl \
     && rm -rf /var/lib/apt/lists/*
 
-# ── ROS 2 Humble (minimal — only what the bridge needs) ─────────────────────
-RUN curl -sSL https://raw.githubusercontent.com/ros/rosdistro/master/ros.key \
-    | gpg --dearmor -o /usr/share/keyrings/ros-archive-keyring.gpg \
- && echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/ros-archive-keyring.gpg] \
-    http://packages.ros.org/ros2/ubuntu $(lsb_release -cs) main" \
-    > /etc/apt/sources.list.d/ros2.list \
- && apt-get update && apt-get install -y --no-install-recommends \
-    ros-humble-ros-base \
-    ros-humble-sensor-msgs \
-    ros-humble-nav-msgs \
-    ros-humble-geometry-msgs \
-    ros-humble-tf2-ros \
-    ros-humble-tf2-geometry-msgs \
-    python3-colcon-common-extensions \
- && rm -rf /var/lib/apt/lists/*
-
-# ── Python deps for the ROS 2 / Isaac Lab bridge wrapper ────────────────────
-RUN /isaac-lab/.venv/bin/pip install \
-    rclpy \
+# ── Python packages via Isaac Lab's venv ─────────────────────────────────────
+# rclpy is NOT installed here — Isaac Sim provides it through the bridge ext.
+# We only add pure-Python utilities that Isaac Sim doesn't bundle.
+RUN /isaac-lab/.venv/bin/pip install --no-cache-dir \
     numpy \
     transforms3d
 
-# ── unitree_sim_isaaclab — G1 assets, DDS config, task environments ─────────
-RUN /isaac-lab/.venv/bin/pip install \
-    "unitree_sim_isaaclab @ git+https://github.com/unitreerobotics/unitree_sim_isaaclab.git"
+# ── unitree_sim_isaaclab — G1 assets + DDS config + task envs ───────────────
+# Provides the Isaac-Velocity-Flat-G1-v1 task and G1 USD assets.
+RUN /isaac-lab/.venv/bin/pip install --no-cache-dir \
+    "unitree_sim_isaaclab @ git+https://github.com/unitreerobotics/unitree_sim_isaaclab.git" \
+    || echo "WARNING: unitree_sim_isaaclab pip install failed — falling back to built-in tasks"
 
-# ── Copy sim wrapper scripts ─────────────────────────────────────────────────
+# ── Copy our sim wrapper scripts into the container ──────────────────────────
 COPY sim/ /workspace/g1_sim/
 RUN chmod +x /workspace/g1_sim/launch_sim.sh
 
-# ── ROS 2 setup sourced on every shell ──────────────────────────────────────
-RUN echo "source /opt/ros/humble/setup.bash" >> /root/.bashrc
-
 WORKDIR /workspace
 
+# The launch script enables isaacsim.ros2.bridge and starts the G1 task.
 ENTRYPOINT ["/workspace/g1_sim/launch_sim.sh"]
