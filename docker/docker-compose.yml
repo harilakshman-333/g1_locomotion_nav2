@@ -34,11 +34,11 @@ services:
     ports:
       - "8211:8211"            # Isaac Sim Omniverse streaming
     healthcheck:
-      test: ["CMD", "ros2", "topic", "list"]
+      test: ["CMD-SHELL", "source /opt/ros/humble/setup.bash 2>/dev/null; ros2 topic list 2>/dev/null | grep -q odom || exit 1"]
       interval: 30s
-      timeout: 10s
-      retries: 5
-      start_period: 90s        # Isaac Sim takes ~60-90 s to fully boot
+      timeout: 15s
+      retries: 10
+      start_period: 180s       # Isaac Sim downloads extensions on first boot (~3 min)
 
   # ── 2. Velocity Bridge — /cmd_vel ↔ locomotion policy / Unitree SDK ────
   vel-bridge:
@@ -52,7 +52,7 @@ services:
       - ros2_net
     depends_on:
       isaac-lab:
-        condition: service_healthy
+        condition: service_started   # don't wait for healthcheck — Isaac Sim is slow to boot
     restart: on-failure
 
   # ── 3. ROS 2 Nav2 — SLAM Toolbox + Nav2 stack ──────────────────────────
