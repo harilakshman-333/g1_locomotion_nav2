@@ -25,6 +25,15 @@ echo "============================================================"
 export DISPLAY="${DISPLAY:-:1}"
 export ACCEPT_EULA="${ACCEPT_EULA}"
 
+# ── Source system ROS 2 (required for AMENT_PREFIX_PATH / RMW) ───────────────
+if [ -f "/opt/ros/humble/setup.bash" ]; then
+    source /opt/ros/humble/setup.bash
+    export RMW_IMPLEMENTATION=rmw_fastrtps_cpp
+    echo "Sourced ROS 2 Humble (${RMW_IMPLEMENTATION})"
+else
+    echo "WARNING: /opt/ros/humble/setup.bash not found. ROS bridge may fail."
+fi
+
 # ── Locate the Isaac Lab / Isaac Sim runner ───────────────────────────────────
 # In the official nvcr.io/nvidia/isaac-lab image the runner is at:
 #   /isaac-sim/runheadless.native.sh  (headless)

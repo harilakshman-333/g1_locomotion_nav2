@@ -14,11 +14,22 @@
 # =============================================================================
 FROM nvcr.io/nvidia/isaac-lab:2.0.0
 
-# ── Minimal system packages (Ubuntu repos only — no ROS repo needed) ─────────
+# ── ROS 2 Repository ──────────────────────────────────────────────────────────
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    git \
-    curl \
+    curl gnupg2 lsb-release software-properties-common git \
+    && curl -sSL https://raw.githubusercontent.com/ros/rosdistro/master/ros.key -o /usr/share/keyrings/ros-archive-keyring.gpg \
+    && echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/ros-archive-keyring.gpg] http://packages.ros.org/ros2/ubuntu $(. /etc/os-release && echo $UBUNTU_CODENAME) main" | tee /etc/apt/sources.list.d/ros2.list > /dev/null \
     && rm -rf /var/lib/apt/lists/*
+
+# ── Install system ROS 2 Humble (needed for AMENT_PREFIX_PATH by bridge) ────
+SHELL ["/bin/bash", "-c"]
+RUN for i in 1 2 3 4 5; do \
+      apt-get update && \
+      apt-get install -y --no-install-recommends \
+        ros-humble-ros-base \
+        ros-humble-rmw-fastrtps-cpp \
+      && break || (echo "Attempt $i failed, retrying in 10s..." && sleep 10); \
+    done && rm -rf /var/lib/apt/lists/*
 
 # ── Python packages via Isaac Sim's bundled Python ──────────────────────────
 # Isaac Sim's Python is at /isaac-sim/kit/python/bin/python3
