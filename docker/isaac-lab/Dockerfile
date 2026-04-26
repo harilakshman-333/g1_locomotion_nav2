@@ -20,16 +20,16 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
-# ── Python packages via Isaac Lab's venv ─────────────────────────────────────
-# rclpy is NOT installed here — Isaac Sim provides it through the bridge ext.
+# ── Python packages via Isaac Sim's bundled Python ──────────────────────────
+# Isaac Sim's Python is at /isaac-sim/kit/python/bin/python3
+# rclpy is NOT installed here — Isaac Sim provides it via isaacsim.ros2.bridge.
 # We only add pure-Python utilities that Isaac Sim doesn't bundle.
-RUN /isaac-lab/.venv/bin/pip install --no-cache-dir \
+RUN /isaac-sim/kit/python/bin/python3 -m pip install --no-cache-dir \
     numpy \
     transforms3d
 
 # ── unitree_sim_isaaclab — G1 assets + DDS config + task envs ───────────────
-# Provides the Isaac-Velocity-Flat-G1-v1 task and G1 USD assets.
-RUN /isaac-lab/.venv/bin/pip install --no-cache-dir \
+RUN /isaac-sim/kit/python/bin/python3 -m pip install --no-cache-dir \
     "unitree_sim_isaaclab @ git+https://github.com/unitreerobotics/unitree_sim_isaaclab.git" \
     || echo "WARNING: unitree_sim_isaaclab pip install failed — falling back to built-in tasks"
 
