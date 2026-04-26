@@ -27,7 +27,7 @@ services:
       - ACCEPT_EULA=Y          # required by Isaac Sim EULA
     volumes:
       - /tmp/.X11-unix:/tmp/.X11-unix:rw
-      - ./checkpoints:/checkpoints:ro
+      - ../checkpoints:/checkpoints:ro
       - isaac_logs:/root/.nvidia-omniverse/logs
     networks:
       - ros2_net
@@ -65,8 +65,8 @@ services:
       - DISPLAY=${DISPLAY:-:1}
     volumes:
       - /tmp/.X11-unix:/tmp/.X11-unix:rw
-      - ./nav2_config:/nav2_config:ro
-      - ./launch:/launch:ro
+      - ../nav2_config:/nav2_config:ro
+      - ../launch:/launch:ro
       - nav2_maps:/maps          # SLAM maps persist here
     networks:
       - ros2_net
@@ -85,7 +85,7 @@ services:
       - DISPLAY=${DISPLAY:-:1}
     volumes:
       - /tmp/.X11-unix:/tmp/.X11-unix:rw
-      - ./nav2_config:/nav2_config:ro
+      - ../nav2_config:/nav2_config:ro
     networks:
       - ros2_net
     entrypoint: >
