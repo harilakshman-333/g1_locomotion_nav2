@@ -27,7 +27,9 @@ export ACCEPT_EULA="${ACCEPT_EULA}"
 
 # ── Source system ROS 2 (required for AMENT_PREFIX_PATH / RMW) ───────────────
 if [ -f "/opt/ros/humble/setup.bash" ]; then
+    set +u
     source /opt/ros/humble/setup.bash
+    set -u
     export RMW_IMPLEMENTATION=rmw_fastrtps_cpp
     echo "Sourced ROS 2 Humble (${RMW_IMPLEMENTATION})"
 else

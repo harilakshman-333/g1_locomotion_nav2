@@ -12,9 +12,9 @@ FROM osrf/ros:humble-desktop
 SHELL ["/bin/bash", "-c"]
 
 # ── Layer 1: Core Nav2 stack ──────────────────────────────────────────────────
-RUN for i in 1 2 3 4 5; do \
-      apt-get update && \
-      apt-get install -y --no-install-recommends \
+RUN SUCCESS=0; for i in {1..10}; do \
+      apt-get update --fix-missing && \
+      apt-get install -y --no-install-recommends --fix-missing \
         ros-humble-nav2-bringup \
         ros-humble-nav2-map-server \
         ros-humble-nav2-lifecycle-manager \
@@ -23,13 +23,13 @@ RUN for i in 1 2 3 4 5; do \
         ros-humble-nav2-costmap-2d \
         ros-humble-nav2-behaviors \
         ros-humble-nav2-bt-navigator \
-      && break || (echo "Attempt $i failed, retrying in 10s…" && sleep 10); \
-    done && rm -rf /var/lib/apt/lists/*
+      && SUCCESS=1 && break || (echo "Attempt $i failed, retrying in 10s…" && sleep 10); \
+    done; [ "$SUCCESS" = "1" ] || exit 1; rm -rf /var/lib/apt/lists/*
 
 # ── Layer 2: SLAM + sensors + localization ────────────────────────────────────
-RUN for i in 1 2 3 4 5; do \
-      apt-get update && \
-      apt-get install -y --no-install-recommends \
+RUN SUCCESS=0; for i in {1..10}; do \
+      apt-get update --fix-missing && \
+      apt-get install -y --no-install-recommends --fix-missing \
         ros-humble-slam-toolbox \
         ros-humble-depthimage-to-laserscan \
         ros-humble-robot-localization \
@@ -37,8 +37,8 @@ RUN for i in 1 2 3 4 5; do \
         ros-humble-nav2-rviz-plugins \
         python3-colcon-common-extensions \
         python3-vcstool \
-      && break || (echo "Attempt $i failed, retrying in 10s…" && sleep 10); \
-    done && rm -rf /var/lib/apt/lists/*
+      && SUCCESS=1 && break || (echo "Attempt $i failed, retrying in 10s…" && sleep 10); \
+    done; [ "$SUCCESS" = "1" ] || exit 1; rm -rf /var/lib/apt/lists/*
 
 # ── Source ROS 2 on every shell ───────────────────────────────────────────────
 RUN echo "source /opt/ros/humble/setup.bash" >> /root/.bashrc

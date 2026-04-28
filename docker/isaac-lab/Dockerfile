@@ -23,13 +23,13 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 # ── Install system ROS 2 Humble (needed for AMENT_PREFIX_PATH by bridge) ────
 SHELL ["/bin/bash", "-c"]
-RUN for i in 1 2 3 4 5; do \
-      apt-get update && \
-      apt-get install -y --no-install-recommends \
+RUN SUCCESS=0; for i in {1..10}; do \
+      apt-get update --fix-missing && \
+      apt-get install -y --no-install-recommends --fix-missing \
         ros-humble-ros-base \
         ros-humble-rmw-fastrtps-cpp \
-      && break || (echo "Attempt $i failed, retrying in 10s..." && sleep 10); \
-    done && rm -rf /var/lib/apt/lists/*
+      && SUCCESS=1 && break || (echo "Attempt $i failed, retrying in 10s..." && sleep 10); \
+    done; [ "$SUCCESS" = "1" ] || exit 1; rm -rf /var/lib/apt/lists/*
 
 # ── Python packages via Isaac Sim's bundled Python ──────────────────────────
 # Isaac Sim's Python is at /isaac-sim/kit/python/bin/python3
